@@ -22,11 +22,12 @@ public class Server {
                   System.out.println("Le nombre reçu est : " + number);
                    OutputStream os = clientSocket.getOutputStream();
                     DataOutputStream dos = new DataOutputStream(os);
-                    dos.writeInt(number);
+                //    dos.writeInt(number);
                   System.out.println("je vais rentrer a vous la multiplication par 5");
                     int result = number * 5;
                     dos.writeInt(result);
-                    System.out.println("Le résultat a été envoyé au client.");
+                    System.out.println("Le résultat a été envoyé au client."+result
+                    );
             }
 
         } catch (IOException e) {

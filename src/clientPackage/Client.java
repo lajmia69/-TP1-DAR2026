@@ -29,7 +29,8 @@ public class Client {
                     System.out.println("je vais recevoir le resultat de la multiplication par 5");
                      InputStream is = socket.getInputStream();
                      DataInputStream dis = new DataInputStream(is);
-                     int recu = dis.readInt();
+                     int result = dis.readInt();
+                     System.out.println("le nombre recu est " + result);
 
                 }
 
