@@ -1,42 +1,61 @@
 package clientPackage;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.util.Scanner;
 
 public class Client {
     public static void main(String[] args) {
+        String host = "192.168.56.1";
+        int port = 1234;
+
         try (Scanner scanner = new Scanner(System.in)) {
-            String host = "127.0.0.1";
-            int port = 1234;
+            System.out.println("Je suis un client pas encore connecté...");
 
-            try {
-                System.out.println("Je suis un client pas encore connecté...");
+            try (Socket socket = new Socket(InetAddress.getByName(host), port)) {
+                System.out.println("Je suis un client connecté !");
+                try (
+                    DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                    DataInputStream dis = new DataInputStream(socket.getInputStream());
+                ) {
+                    while (true) {
+                        System.out.println("\n=== Service de calculatrice ===");
+                        System.out.println("1. Addition (+)");
+                        System.out.println("2. Soustraction (-)");
+                        System.out.println("3. Multiplication (*)");
+                        System.out.println("4. Division (/)");
+                        System.out.println("0. Quitter");
+                        System.out.print("Choix : ");
+                        int choix = scanner.nextInt();
+                        scanner.nextLine();
+                        if (choix == 0) break;
+                        String operation = "";
+                        switch (choix) {
+                            case 1: operation = "+"; break;
+                            case 2: operation = "-"; break;
+                            case 3: operation = "*"; break;
+                            case 4: operation = "/"; break;
+                            default: System.out.println("Choix invalide."); continue;
+                        }
+                        System.out.print("Donner le premier nombre : ");
+                        int number1 = scanner.nextInt();
+                        System.out.print("Donner le second nombre : ");
+                        int number2 = scanner.nextInt();
 
-                try (Socket socket = new Socket(host, port)) {
-                    System.out.println("Je suis un client connecté !");
-                    System.out.println("Adresse locale du socket : " + socket.getLocalSocketAddress());
-                    System.out.println("donner un nombre");
-                    int number = scanner.nextInt();
-                    OutputStream os = socket.getOutputStream();
-                    DataOutputStream dos = new DataOutputStream(os);
-                    dos.writeInt(number);
-                    System.out.println("element envoyee");
-                    System.out.println("je vais recevoir le resultat de la multiplication par 5");
-                     InputStream is = socket.getInputStream();
-                     DataInputStream dis = new DataInputStream(is);
-                     int result = dis.readInt();
-                     System.out.println("le nombre recu est " + result);
+                        dos.writeUTF(operation);
+                        dos.writeInt(number1);
+                        dos.writeInt(number2);
+                        dos.flush();
 
+                        String result = dis.readUTF();
+                        System.out.println("Résultat reçu : " + result);
+                    }
                 }
-
             } catch (IOException e) {
                 System.err.println("Erreur lors de la connexion : " + e.getMessage());
             }
+        } catch (Exception e) {
+            System.err.println("Erreur côté client : " + e.getMessage());
         }
     }
 }

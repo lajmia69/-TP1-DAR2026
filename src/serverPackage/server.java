@@ -1,37 +1,59 @@
 package serverPackage;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 public class Server {
     public static void main(String[] args) {
-        int port = 1234; 
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        int port = 1234;
+        try (ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByName("192.168.56.1"))) {
             System.out.println("Je suis un serveur en attente de la connexion d'un client...");
 
             try (Socket clientSocket = serverSocket.accept()) {
                 System.out.println("Un client est connecté ! Adresse : " + clientSocket.getInetAddress());
-                  InputStream is = clientSocket.getInputStream();
-                  DataInputStream dis = new DataInputStream(is);
-                  int number = dis.readInt();
-                  System.out.println("Le nombre reçu est : " + number);
-                   OutputStream os = clientSocket.getOutputStream();
-                    DataOutputStream dos = new DataOutputStream(os);
-                //    dos.writeInt(number);
-                  System.out.println("je vais rentrer a vous la multiplication par 5");
-                    int result = number * 5;
-                    dos.writeInt(result);
-                    System.out.println("Le résultat a été envoyé au client."+result
-                    );
-            }
 
+                try (
+                    DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+                    DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
+                ) {
+                    while (true) {
+                        try {
+                            String operation = dis.readUTF();
+                            int number1 = dis.readInt();
+                            int number2 = dis.readInt();
+
+                            String resultat;
+                            switch (operation) {
+                                case "+":
+                                    resultat = Integer.toString(number1 + number2);
+                                    break;
+                                case "-":
+                                    resultat = Integer.toString(number1 - number2);
+                                    break;
+                                case "*":
+                                    resultat = Integer.toString(number1 * number2);
+                                    break;
+                                case "/":
+                                    if (number2 != 0)
+                                        resultat = Double.toString((double)number1 / number2);
+                                    else
+                                        resultat = "Erreur : division par zéro";
+                                    break;
+                                default:
+                                    resultat = "Erreur d'opération";
+                            }
+                            dos.writeUTF(resultat);
+                            dos.flush();
+                        } catch (EOFException e) {
+                            break;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Erreur lors de la connexion d'un client : " + e.getMessage());
+            }
         } catch (IOException e) {
-            System.err.println("Erreur lors de la connexion du serveur : " + e.getMessage());
+            System.err.println("Erreur lors de l'ouverture du serveur : " + e.getMessage());
         }
     }
 }
